@@ -91,6 +91,27 @@ open oopay-docs/CONTRIBUTING.md
 |------|------|------|------|
 | v1.0 | 2025-04 | 设计中 | 核心支付功能设计完成 |
 
+## 开发计划
+
+📋 **[完善开发计划](./FULL_DEV_PLAN.md)** - 8个Phase详细任务分解
+
+🎯 **[开发计划跟踪 Issue #1](https://github.com/kimiaic/payment_ooxx/issues/1)** - 进度跟踪与确认
+
+### 阶段概览
+
+| Phase | 目标 | 状态 |
+|-------|------|------|
+| Phase 0 | 项目初始化 | ⬜ 待开始 |
+| Phase 1 | 基础设施 | ⬜ 待开始 |
+| Phase 2 | 核心服务 | ⬜ 待开始 |
+| Phase 3 | 资金服务 | ⬜ 待开始 |
+| Phase 4 | 运营服务 | ⬜ 待开始 |
+| Phase 5 | 管理后台 | ⬜ 待开始 |
+| Phase 6 | 通道实现 | ⬜ 待开始 |
+| Phase 7 | 生产准备 | ⬜ 待开始 |
+
+**确认后请回复**："计划确认，开始执行 Phase 0"
+
 ## 贡献指南
 
 详见 [CONTRIBUTING.md](./CONTRIBUTING.md)
