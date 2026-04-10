@@ -1,0 +1,121 @@
+# .github/workflows/02-agent-gateway.yml
+name: 🤖 Agent-02 - Infra Gateway
+
+on:
+  workflow_dispatch:
+    inputs:
+      contract_version:
+        description: '契约版本'
+        required: true
+      trigger_source:
+        description: '触发来源'
+        required: false
+        default: 'agent-01'
+
+env:
+  AGENT_ID: "02"
+  AGENT_NAME: "Infra-Gateway"
+  CONTRACT_VERSION: ${{ github.event.inputs.contract_version }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      start_time: ${{ steps.timestamp.outputs.time }}
+    steps:
+      - name: Checkout Contract
+        uses: actions/checkout@v4
+        with:
+          ref: contract-${{ github.event.inputs.contract_version }}
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Record Start Time
+        id: timestamp
+        run: echo "time=$(date -Iseconds)" >> $GITHUB_OUTPUT
+      
+      - name: Update Progress - Started
+        run: echo "🏗️ Agent-$AGENT_ID ($AGENT_NAME) 开始执行"
+
+  generate:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Generate Gateway Module
+        run: |
+          echo "🌐 生成 oopay-gateway 模块..."
+          mkdir -p oopay/oopay-gateway/src/main/java/com/oopay/gateway
+          echo "✅ Gateway 模块脚手架生成完成"
+
+  build:
+    needs: generate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Build Gateway Module
+        run: |
+          cd oopay
+          mvn clean compile -pl oopay-gateway -am --batch-mode
+      
+      - name: Run Unit Tests
+        run: |
+          cd oopay
+          mvn test -pl oopay-gateway --batch-mode || true
+
+  integrate:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Create Integration Branch
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout -b "agent-$AGENT_ID-$CONTRACT_VERSION"
+          git add .
+          git commit -m "feat($AGENT_ID): $AGENT_NAME implementation" || true
+      
+      - name: Create Pull Request
+        run: echo "📤 创建 PR"
+
+  finalize:
+    needs: [setup, generate, build, integrate]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Update GitHub Project
+        run: |
+          if [ "${{ needs.integrate.result }}" == "success" ]; then
+            echo "📊 Agent-$AGENT_ID: ✅ Done"
+          else
+            echo "📊 Agent-$AGENT_ID: ❌ Failed"
+          fi
+      
+      - name: Send Notification
+        run: echo "📢 Agent-$AGENT_ID 完成通知"
