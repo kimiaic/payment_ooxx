@@ -1,0 +1,119 @@
+# .github/workflows/00-contract-freeze.yml
+name: 🎯 Phase 0 - Contract Freeze
+
+on:
+  workflow_dispatch:
+    inputs:
+      contract_version:
+        description: '契约版本号 (例如: v1.0)'
+        required: true
+        default: 'v1.0'
+
+env:
+  CONTRACT_VERSION: ${{ github.event.inputs.contract_version }}
+
+jobs:
+  freeze-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Validate Contract Documents
+        run: |
+          echo "🔒 验证契约文档完整性..."
+          
+          # 检查必需文件
+          required_files=(
+            "oopay-docs/docs/api/api-reference.md"
+            "oopay-docs/docs/api/admin-api-reference.md"
+            "oopay-docs/docs/db/db-schema.md"
+            "oopay-docs/docs/AGENT_PARALLEL_PLAN.md"
+          )
+          
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ 缺失必需文件: $file"
+              exit 1
+            fi
+            echo "✅ $file"
+          done
+          
+          echo "✅ 所有契约文档验证通过"
+      
+      - name: Create Contract Tag
+        run: |
+          echo "🏷️ 创建契约标签: contract-$CONTRACT_VERSION"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "contract-$CONTRACT_VERSION" -m "接口契约冻结 $CONTRACT_VERSION"
+          git push origin "contract-$CONTRACT_VERSION"
+      
+      - name: Initialize Progress Tracking
+        run: |
+          echo "📊 初始化进度跟踪..."
+          mkdir -p .github/progress
+          cat > .github/progress/status.json << EOF
+          {
+            "contract_version": "$CONTRACT_VERSION",
+            "start_time": "$(date -Iseconds)",
+            "phases": {
+              "phase-0": {"status": "in_progress", "agents": ["01", "02"]},
+              "phase-1": {"status": "waiting", "agents": ["03", "04", "05"]},
+              "phase-2": {"status": "waiting", "agents": ["06", "07", "08"]},
+              "phase-3": {"status": "waiting", "agents": ["09", "10"]},
+              "phase-4": {"status": "waiting", "agents": ["11", "12"]}
+            },
+            "agents": {
+              "01": {"status": "triggered", "progress": 0},
+              "02": {"status": "waiting", "progress": 0},
+              "03": {"status": "waiting", "progress": 0},
+              "04": {"status": "waiting", "progress": 0},
+              "05": {"status": "waiting", "progress": 0},
+              "06": {"status": "waiting", "progress": 0},
+              "07": {"status": "waiting", "progress": 0},
+              "08": {"status": "waiting", "progress": 0},
+              "09": {"status": "waiting", "progress": 0},
+              "10": {"status": "waiting", "progress": 0},
+              "11": {"status": "waiting", "progress": 0},
+              "12": {"status": "waiting", "progress": 0}
+            }
+          }
+          EOF
+      
+      - name: Trigger Phase 0 - Infrastructure
+        run: |
+          echo "🚀 触发 Phase 0: 基础设施 Agent"
+          
+          # Agent-01: Infra-Core (无依赖)
+          echo "触发 Agent-01: Infra-Core"
+          gh workflow run 01-agent-infra.yml \
+            -f contract_version="$CONTRACT_VERSION" \
+            -f trigger_source="contract-freeze"
+          
+          # Agent-02: Infra-Gateway (依赖 Agent-01)
+          # 由 Agent-01 完成后自动触发
+          
+      - name: Trigger Phase 1 - Core Services
+        run: |
+          echo "🚀 触发 Phase 1: 核心服务 Agent (并行)"
+          
+          # 这些 Agent 只依赖契约，可以并行启动
+          for agent in 03 04 05; do
+            echo "触发 Agent-$agent"
+            gh workflow run 0${agent}-agent-*.yml \
+              -f contract_version="$CONTRACT_VERSION" \
+              -f trigger_source="contract-freeze" || true
+          done
+      
+      - name: Send Notification
+        run: |
+          echo "📢 流水线已启动"
+          echo "契约版本: $CONTRACT_VERSION"
+          echo "Phase 0-1 Agent 已触发"
+          # 可以在这里添加飞书/钉钉通知
+      
+      - name: Update GitHub Project
+        run: |
+          echo "📊 更新 GitHub Projects 看板"
+          # 使用 GitHub CLI 或 API 更新 Project 状态
