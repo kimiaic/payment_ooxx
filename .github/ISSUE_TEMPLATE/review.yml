@@ -1,0 +1,56 @@
+name: 审查建议
+description: 提交对 OOPay 项目的审查建议
+title: "[审查] "
+labels: ["review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 审查建议模板
+        请填写以下内容提交审查建议。
+
+  - type: input
+    id: target
+    attributes:
+      label: 审查对象
+      description: 被审查的文件或模块
+      placeholder: 例如：docs/prd/PRD-v1.0.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: issues
+    attributes:
+      label: 发现的问题 / 建议
+      description: 列出发现的问题或改进建议
+      placeholder: |
+        1. 问题描述...
+        2. 问题描述...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solutions
+    attributes:
+      label: 建议修改方案
+      description: 提供具体的修改建议
+      placeholder: |
+        A. 方案一...
+        B. 方案二...
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      options:
+        - "🔴 P0 - 阻塞性问题"
+        - "🟡 P1 - 重要改进"
+        - "🟢 P2 - 建议优化"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充说明
+      description: 其他需要说明的内容
