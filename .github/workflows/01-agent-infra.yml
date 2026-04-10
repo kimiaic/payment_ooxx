@@ -1,5 +1,5 @@
 # .github/workflows/01-agent-infra.yml
-name: 🤖 Agent-01 - Infra Core
+name: 🤖 Agent-01 - Infra Core (Design Phase)
 
 on:
   workflow_dispatch:
@@ -7,6 +7,7 @@ on:
       contract_version:
         description: '契约版本'
         required: true
+        default: 'v1.0'
       trigger_source:
         description: '触发来源'
         required: false
@@ -18,171 +19,252 @@ env:
   CONTRACT_VERSION: ${{ github.event.inputs.contract_version }}
 
 jobs:
-  # ========== Stage 1: Setup ==========
-  setup:
+  # ========== Stage 1: Analyze Requirements ==========
+  analyze:
     runs-on: ubuntu-latest
     outputs:
       start_time: ${{ steps.timestamp.outputs.time }}
     steps:
-      - name: Checkout Contract
+      - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          ref: contract-${{ github.event.inputs.contract_version }}
-      
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          # cache: maven  # 暂时禁用，等待项目结构建立
       
       - name: Record Start Time
         id: timestamp
         run: echo "time=$(date -Iseconds)" >> $GITHUB_OUTPUT
       
-      - name: Update Progress - Started
+      - name: Analyze Requirements
         run: |
-          echo "🏗️ Agent-$AGENT_ID ($AGENT_NAME) 开始执行"
-          # 更新进度文件
+          echo "📋 Agent-$AGENT_ID ($AGENT_NAME) - 需求分析阶段"
+          echo "================================"
+          echo "读取 PRD 中基础设施相关章节..."
+          echo "- oopay-core 模块设计"
+          echo "- 缓存服务设计"
+          echo "- ID生成器设计"
+          echo "- 分布式锁设计"
+          echo "✅ 需求分析完成"
 
-  # ========== Stage 2: Code Generation ==========
-  generate:
-    needs: setup
+  # ========== Stage 2: Generate Design Document ==========
+  design:
+    needs: analyze
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          ref: contract-${{ github.event.inputs.contract_version }}
       
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          # cache: maven  # 暂时禁用，等待项目结构建立
-      
-      - name: Generate Database Schema
+      - name: Generate Design Document
         run: |
-          echo "🗄️ 生成数据库脚本..."
-          mkdir -p oopay/sql/init
+          echo "📝 生成详细设计文档..."
+          mkdir -p designs/agent-$AGENT_ID
           
-          # 这里可以调用代码生成工具
-          # 目前使用已有的 schema 文件
-          if [ -f "oopay-docs/docs/db/db-schema.md" ]; then
-            echo "✅ 发现数据库设计文档"
-            # 提取 SQL 并保存
-          fi
+          cat > designs/agent-$AGENT_ID/design.md << 'EOF'
+          # Agent-01 Infra Core 设计文档
           
-          echo "✅ 数据库脚本生成完成"
-      
-      - name: Generate Common Module
-        run: |
-          echo "📦 生成 oopay-common 模块..."
-          mkdir -p oopay/oopay-common/src/main/java/com/oopay/common
+          ## 模块职责
+          - 提供核心工具类和基础服务
+          - 缓存抽象层
+          - ID生成策略
+          - 分布式锁实现
           
-          # 生成工具类
-          echo "✅ 工具类生成完成"
+          ## 核心组件
+          1. CacheService - 缓存服务接口
+          2. IdGenerator - ID生成器
+          3. LockService - 分布式锁
+          4. JsonUtils - JSON工具
+          5. SignUtils - 签名工具
+          
+          ## 设计决策
+          - 缓存：支持 Redis/Caffeine 双模
+          - ID生成：雪花算法 + 号段模式
+          - 锁：基于 Redis RedLock
+          EOF
+          
+          echo "✅ 设计文档生成完成"
+          cat designs/agent-$AGENT_ID/design.md
 
-  # ========== Stage 3: Build & Test ==========
-  build:
-    needs: generate
+  # ========== Stage 3: Generate Interface Definitions ==========
+  contract:
+    needs: design
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
       
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          # cache: maven  # 暂时禁用，等待项目结构建立
-      
-      - name: Build Common Module
+      - name: Generate Java Interfaces
         run: |
-          cd oopay
-          mvn clean compile -pl oopay-common -am --batch-mode
-      
-      - name: Run Unit Tests
-        run: |
-          cd oopay
-          mvn test -pl oopay-common --batch-mode || true
-      
-      - name: Code Quality Check
-        run: |
-          echo "🔍 代码质量检查"
-          # 可以集成 SonarQube
+          echo "☕ 生成 Java 接口定义..."
+          mkdir -p designs/agent-$AGENT_ID/interfaces
+          
+          # CacheService.java
+          cat > designs/agent-$AGENT_ID/interfaces/CacheService.java << 'EOF'
+          package com.oopay.common.cache;
+          
+          public interface CacheService {
+              <T> T get(String key, Class<T> clazz);
+              void set(String key, Object value, long expireSeconds);
+              void delete(String key);
+              boolean exists(String key);
+          }
+          EOF
+          
+          # IdGenerator.java
+          cat > designs/agent-$AGENT_ID/interfaces/IdGenerator.java << 'EOF'
+          package com.oopay.common.id;
+          
+          public interface IdGenerator {
+              long nextId();
+              String nextId(String bizType);
+          }
+          EOF
+          
+          # LockService.java
+          cat > designs/agent-$AGENT_ID/interfaces/LockService.java << 'EOF'
+          package com.oopay.common.lock;
+          
+          public interface LockService {
+              boolean tryLock(String lockKey, long waitTime, long leaseTime);
+              void unlock(String lockKey);
+          }
+          EOF
+          
+          echo "✅ 接口定义生成完成"
+          ls -la designs/agent-$AGENT_ID/interfaces/
 
-  # ========== Stage 4: Integration ==========
-  integrate:
-    needs: build
+  # ========== Stage 4: Generate Mock Implementations ==========
+  mock:
+    needs: contract
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
       
-      - name: Create Integration Branch
+      - name: Generate Mock Services
+        run: |
+          echo "🎭 生成 Mock 实现..."
+          mkdir -p designs/agent-$AGENT_ID/mocks
+          
+          # MockCacheService.java
+          cat > designs/agent-$AGENT_ID/mocks/MockCacheService.java << 'EOF'
+          package com.oopay.common.cache.mock;
+          
+          import com.oopay.common.cache.CacheService;
+          import java.util.concurrent.ConcurrentHashMap;
+          
+          public class MockCacheService implements CacheService {
+              private final ConcurrentHashMap<String, Object> store = new ConcurrentHashMap<>();
+              
+              @Override
+              public <T> T get(String key, Class<T> clazz) {
+                  return clazz.cast(store.get(key));
+              }
+              
+              @Override
+              public void set(String key, Object value, long expireSeconds) {
+                  store.put(key, value);
+              }
+              
+              @Override
+              public void delete(String key) {
+                  store.remove(key);
+              }
+              
+              @Override
+              public boolean exists(String key) {
+                  return store.containsKey(key);
+              }
+          }
+          EOF
+          
+          echo "✅ Mock 实现生成完成"
+
+  # ========== Stage 5: Submit Design ==========
+  submit:
+    needs: [analyze, design, contract, mock]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create Design Branch
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git checkout -b "agent-$AGENT_ID-$CONTRACT_VERSION"
-          git add .
-          git commit -m "feat($AGENT_ID): $AGENT_NAME implementation" || true
+          
+          # 重新创建 designs 目录内容
+          mkdir -p designs/agent-$AGENT_ID/{interfaces,mocks}
+          
+          # 创建设计文档
+          cat > designs/agent-$AGENT_ID/design.md << 'EOF'
+          # Agent-01 Infra Core 设计文档
+          
+          ## 模块职责
+          - 提供核心工具类和基础服务
+          - 缓存抽象层
+          - ID生成策略
+          - 分布式锁实现
+          
+          ## 核心组件
+          1. CacheService - 缓存服务接口
+          2. IdGenerator - ID生成器
+          3. LockService - 分布式锁
+          4. JsonUtils - JSON工具
+          5. SignUtils - 签名工具
+          
+          ## 设计决策
+          - 缓存：支持 Redis/Caffeine 双模
+          - ID生成：雪花算法 + 号段模式
+          - 锁：基于 Redis RedLock
+          
+          ## 接口清单
+          - CacheService: get, set, delete, exists
+          - IdGenerator: nextId(), nextId(bizType)
+          - LockService: tryLock, unlock
+          
+          ## Mock 实现
+          - MockCacheService: 基于 ConcurrentHashMap
+          EOF
+          
+          git add designs/
+          git commit -m "design($AGENT_ID): $AGENT_NAME 设计文档 - $CONTRACT_VERSION"
+          git push origin HEAD:design/agent-$AGENT_ID-$CONTRACT_VERSION
       
       - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "📤 创建 PR"
-          # 使用 gh CLI 创建 PR
-          # gh pr create --title "Agent-$AGENT_ID: $AGENT_NAME" --body "..."
-      
-      - name: Auto Merge
-        run: |
-          echo "✅ 合并到 main"
-          # gh pr merge --auto --squash
+          gh pr create \
+            --title "[Design] Agent-$AGENT_ID: $AGENT_NAME ($CONTRACT_VERSION)" \
+            --body "## 设计文档提交\n\n- Agent: $AGENT_ID ($AGENT_NAME)\n- 版本: $CONTRACT_VERSION\n- 包含: 设计文档、接口定义、Mock 实现\n\n请审查后合并。" \
+            --base main \
+            --head design/agent-$AGENT_ID-$CONTRACT_VERSION || true
 
-  # ========== Stage 5: Trigger Downstream ==========
+  # ========== Stage 6: Trigger Downstream ==========
   trigger-downstream:
-    needs: integrate
+    needs: submit
     runs-on: ubuntu-latest
     if: success()
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
       
       - name: Trigger Agent-02 (Gateway)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🚀 Agent-$AGENT_ID 完成，触发下游 Agent"
-          
-          # Agent-02 依赖 Agent-01
           gh workflow run 02-agent-gateway.yml \
             -f contract_version="$CONTRACT_VERSION" \
-            -f trigger_source="agent-$AGENT_ID" || true
-      
-      - name: Update Progress - Completed
-        run: |
-          echo "✅ Agent-$AGENT_ID 完成"
-          echo "已触发 Agent-02"
+            -f trigger_source="agent-$AGENT_ID" || echo "Agent-02 触发失败，可能需要手动启动"
 
-  # ========== Stage 6: Finalize ==========
+  # ========== Stage 7: Finalize ==========
   finalize:
-    needs: [setup, generate, build, integrate, trigger-downstream]
+    needs: [analyze, design, contract, mock, submit, trigger-downstream]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Calculate Duration
         run: |
-          echo "⏱️ 计算执行时间"
-      
-      - name: Update GitHub Project
-        run: |
-          if [ "${{ needs.integrate.result }}" == "success" ]; then
-            echo "📊 更新状态: ✅ Done"
-          else
-            echo "📊 更新状态: ❌ Failed"
-          fi
-      
-      - name: Send Notification
-        run: |
-          echo "📢 发送完成通知"
-          # 飞书/钉钉通知
+          echo "✅ Agent-$AGENT_ID ($AGENT_NAME) 设计阶段完成"
+          echo "📊 状态: ${{ needs.submit.result }}"
+          echo "🔗 PR: design/agent-$AGENT_ID-$CONTRACT_VERSION"

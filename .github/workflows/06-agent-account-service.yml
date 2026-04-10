@@ -1,4 +1,4 @@
-name: 🤖 Agent-12 - Frontend (Design Phase)
+name: 🤖 Agent-06 - Account-Service (Design Phase)
 
 on:
   workflow_dispatch:
@@ -13,8 +13,8 @@ on:
         default: 'manual'
 
 env:
-  AGENT_ID: "12"
-  AGENT_NAME: "Frontend"
+  AGENT_ID: "06"
+  AGENT_NAME: "Account-Service"
   CONTRACT_VERSION: ${{ github.event.inputs.contract_version }}
 
 jobs:
@@ -27,8 +27,8 @@ jobs:
       - id: timestamp
         run: echo "time=$(date -Iseconds)" >> $GITHUB_OUTPUT
       - run: |
-          echo "📋 Agent-12 (Frontend) - 需求分析"
-          echo "设计内容: 前端设计、管理界面"
+          echo "📋 Agent-06 (Account-Service) - 需求分析"
+          echo "设计内容: 账户服务设计、余额管理"
           echo "✅ 需求分析完成"
 
   design:
@@ -38,12 +38,12 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           echo "📝 生成设计文档..."
-          mkdir -p designs/agent-12
-          cat > designs/agent-12/design.md << 'DESIGN'
-          # Agent-12 Frontend 设计文档
+          mkdir -p designs/agent-06
+          cat > designs/agent-06/design.md << 'DESIGN'
+          # Agent-06 Account-Service 设计文档
           
           ## 模块职责
-          - 前端设计、管理界面
+          - 账户服务设计、余额管理
           
           ## 设计要点
           1. 接口定义
@@ -63,8 +63,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           echo "☕ 生成接口定义..."
-          mkdir -p designs/agent-12/interfaces
-          echo "// Agent-12 接口定义" > designs/agent-12/interfaces/Service.java
+          mkdir -p designs/agent-06/interfaces
+          echo "// Agent-06 接口定义" > designs/agent-06/interfaces/Service.java
           echo "✅ 接口定义完成"
 
   mock:
@@ -74,8 +74,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           echo "🎭 生成 Mock 实现..."
-          mkdir -p designs/agent-12/mocks
-          echo "// Agent-12 Mock 实现" > designs/agent-12/mocks/MockService.java
+          mkdir -p designs/agent-06/mocks
+          echo "// Agent-06 Mock 实现" > designs/agent-06/mocks/MockService.java
           echo "✅ Mock 实现完成"
 
   submit:
@@ -88,11 +88,11 @@ jobs:
       - run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          mkdir -p designs/agent-12/{interfaces,mocks}
-          echo "# Agent-12 Design" > designs/agent-12/design.md
+          mkdir -p designs/agent-06/{interfaces,mocks}
+          echo "# Agent-06 Design" > designs/agent-06/design.md
           git add designs/
-          git commit -m "design(12): Frontend - $CONTRACT_VERSION" || true
-          git push origin HEAD:design/agent-12-$CONTRACT_VERSION || true
+          git commit -m "design(06): Account-Service - $CONTRACT_VERSION" || true
+          git push origin HEAD:design/agent-06-$CONTRACT_VERSION || true
 
   finalize:
     needs: [analyze, design, contract, mock, submit]
@@ -100,5 +100,5 @@ jobs:
     if: always()
     steps:
       - run: |
-          echo "✅ Agent-12 (Frontend) 设计阶段完成"
+          echo "✅ Agent-06 (Account-Service) 设计阶段完成"
           echo "📊 状态: ${{ needs.submit.result }}"
