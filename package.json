@@ -1,0 +1,10 @@
+{
+  "name": "oopay-frontend-placeholder",
+  "version": "1.0.0",
+  "description": "Frontend placeholder for CI pipeline",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Placeholder build'",
+    "test": "echo 'Placeholder test'"
+  }
+}
