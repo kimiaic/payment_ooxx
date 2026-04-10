@@ -56,7 +56,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
+          # cache: maven  # 暂时禁用，等待项目结构建立
       
       - name: Build All Modules
         run: |
