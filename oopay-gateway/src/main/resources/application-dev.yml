@@ -1,86 +1,20 @@
-server:
-  port: 8080
-
 spring:
-  application:
-    name: oopay-gateway
-  main:
-    web-application-type: reactive
-  # 开发环境Redis（本地）
+  datasource:
+    url: jdbc:mysql://localhost:3306/oopay?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: ${DB_PASSWORD:your_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
     host: localhost
     port: 6379
-    password:
     database: 0
-    timeout: 5000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: 1000ms
-  cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: false
-      routes:
-        # 商户服务路由（开发环境直连）
-        - id: oopay-merchant
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/merchant/**
-          filters:
-            - StripPrefix=1
-        # 支付服务路由
-        - id: oopay-payment
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/pay/**
-          filters:
-            - StripPrefix=1
-        # 账户服务路由
-        - id: oopay-account
-          uri: http://localhost:8083
-          predicates:
-            - Path=/api/account/**
-          filters:
-            - StripPrefix=1
-        # 通知服务路由
-        - id: oopay-notify
-          uri: http://localhost:8084
-          predicates:
-            - Path=/api/notify/**
-          filters:
-            - StripPrefix=1
-        # 管理服务路由
-        - id: oopay-admin
-          uri: http://localhost:8085
-          predicates:
-            - Path=/api/admin/**
-          filters:
-            - StripPrefix=1
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods: "*"
-            allowedHeaders: "*"
-            allowCredentials: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: oopay
+    password: oopay
 
-# 日志配置（开发环境详细）
 logging:
   level:
-    root: DEBUG
-    com.oopay.gateway: DEBUG
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] [%X{requestId}] %cyan(%logger{50}) - %msg%n"
-
-# 开发环境禁用限流或放宽
-oopay:
-  rate-limit:
-    enabled: false
-    replenish-rate: 1000
-    burst-capacity: 2000
+    com.oopay: DEBUG
+    org.springframework.web: DEBUG
