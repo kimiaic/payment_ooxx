@@ -1,5 +1,6 @@
 package com.oopay.common.dto;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,65 +14,30 @@ public class PageResult<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 当前页码
-     */
-    private Integer pageNum;
-
-    /**
-     * 每页大小
-     */
-    private Integer pageSize;
-
-    /**
-     * 总记录数
-     */
-    private Long total;
-
-    /**
-     * 总页数
-     */
-    private Integer pages;
-
-    /**
-     * 当前页数据
-     */
-    private List<T> list;
-
-    /**
-     * 是否有下一页
-     */
-    private Boolean hasNext;
-
-    /**
-     * 是否有上一页
-     */
-    private Boolean hasPrevious;
+    private long total;
+    private long pages;
+    private long current;
+    private long size;
+    private List<T> records;
 
     public PageResult() {
     }
 
-    public PageResult(Integer pageNum, Integer pageSize, Long total, List<T> list) {
-        this.pageNum = pageNum;
-        this.pageSize = pageSize;
+    public PageResult(long total, long pages, long current, long size, List<T> records) {
         this.total = total;
-        this.list = list;
-        this.pages = (int) ((total + pageSize - 1) / pageSize);
-        this.hasNext = (long) pageNum * pageSize < total;
-        this.hasPrevious = pageNum > 1;
+        this.pages = pages;
+        this.current = current;
+        this.size = size;
+        this.records = records;
     }
 
-    /**
-     * 构建分页结果
-     */
-    public static <T> PageResult<T> of(Integer pageNum, Integer pageSize, Long total, List<T> list) {
-        return new PageResult<>(pageNum, pageSize, total, list);
-    }
-
-    /**
-     * 空分页结果
-     */
-    public static <T> PageResult<T> empty(Integer pageNum, Integer pageSize) {
-        return new PageResult<>(pageNum, pageSize, 0L, List.of());
+    public static <T> PageResult<T> of(IPage<T> page) {
+        return new PageResult<>(
+                page.getTotal(),
+                page.getPages(),
+                page.getCurrent(),
+                page.getSize(),
+                page.getRecords()
+        );
     }
 }
