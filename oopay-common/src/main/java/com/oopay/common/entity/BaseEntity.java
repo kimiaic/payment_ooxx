@@ -1,67 +1,75 @@
 package com.oopay.common.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * 基础实体类
- * 包含乐观锁、逻辑删除等通用字段
+ * 所有实体类都应继承此类
  */
 @Data
-public class BaseEntity implements Serializable {
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键ID（雪花算法）
+     * 主键 ID
      */
-    @TableId(value = "id", type = IdType.INPUT)
+    @Id
+    @TableId(type = IdType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
      * 创建时间
      */
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    @CreatedDate
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
 
     /**
      * 更新时间
      */
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    @LastModifiedDate
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
 
     /**
-     * 创建人
+     * 创建人 ID
      */
-    @TableField(value = "created_by", fill = FieldFill.INSERT)
-    private Long createdBy;
+    @CreatedBy
+    @TableField(fill = FieldFill.INSERT)
+    private Long createBy;
 
     /**
-     * 更新人
+     * 更新人 ID
      */
-    @TableField(value = "updated_by", fill = FieldFill.INSERT_UPDATE)
-    private Long updatedBy;
+    @LastModifiedBy
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updateBy;
 
     /**
      * 乐观锁版本号
      */
     @Version
-    @TableField(value = "version")
+    @TableField(fill = FieldFill.INSERT)
     private Integer version;
 
     /**
-     * 逻辑删除标志（0-未删除，1-已删除）
+     * 逻辑删除标志：0-正常，1-已删除
      */
     @TableLogic
-    @TableField(value = "deleted")
+    @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
-
-    /**
-     * 租户ID（多租户支持）
-     */
-    @TableField(value = "tenant_id")
-    private Long tenantId;
 }
