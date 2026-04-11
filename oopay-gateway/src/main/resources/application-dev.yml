@@ -1,0 +1,40 @@
+# 开发环境配置
+
+spring:
+  # 开发环境数据库配置（需本地修改）
+  datasource:
+    url: jdbc:mysql://localhost:3306/oopay?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    # 本地修改：填写你的数据库密码
+    password: your_password_here
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # 开发环境 Redis（默认本地，可覆盖）
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+  
+  # 开发环境 RabbitMQ（默认本地，可覆盖）
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: oopay
+    password: oopay
+
+# 开发环境日志级别
+logging:
+  level:
+    com.oopay: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+  file:
+    name: logs/oopay-gateway.log
+
+# 网关路由（开发环境可调整）
+oopay:
+  gateway:
+    rate-limit:
+      enabled: true
+      default-rate: 100
+      default-burst: 200
