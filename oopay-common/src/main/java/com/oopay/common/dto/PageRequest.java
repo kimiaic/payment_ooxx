@@ -2,106 +2,29 @@ package com.oopay.common.dto;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
-/**
- * 分页请求参数
- */
 @Data
-public class PageRequest implements Serializable {
+public class PageRequest {
+    private static final long DEFAULT_CURRENT = 1L;
+    private static final long DEFAULT_SIZE = 20L;
+    private static final long MAX_SIZE = 100L;
 
-    private static final long serialVersionUID = 1L;
+    private Long current;
+    private Long size;
 
-    /**
-     * 默认页码
-     */
-    private static final int DEFAULT_PAGE_NUM = 1;
-
-    /**
-     * 默认每页大小
-     */
-    private static final int DEFAULT_PAGE_SIZE = 10;
-
-    /**
-     * 最大每页大小
-     */
-    private static final int MAX_PAGE_SIZE = 1000;
-
-    /**
-     * 当前页码（从1开始）
-     */
-    private Integer pageNum;
-
-    /**
-     * 每页大小
-     */
-    private Integer pageSize;
-
-    /**
-     * 排序字段
-     */
-    private String orderBy;
-
-    /**
-     * 是否升序（true升序，false降序）
-     */
-    private Boolean asc;
-
-    public PageRequest() {
-        this.pageNum = DEFAULT_PAGE_NUM;
-        this.pageSize = DEFAULT_PAGE_SIZE;
-        this.asc = false;
-    }
-
-    /**
-     * 获取有效的页码
-     */
-    public Integer getPageNum() {
-        if (pageNum == null || pageNum < 1) {
-            return DEFAULT_PAGE_NUM;
+    public Long getCurrent() {
+        if (current == null || current < 1) {
+            return DEFAULT_CURRENT;
         }
-        return pageNum;
+        return current;
     }
 
-    /**
-     * 获取有效的每页大小
-     */
-    public Integer getPageSize() {
-        if (pageSize == null || pageSize < 1) {
-            return DEFAULT_PAGE_SIZE;
+    public Long getSize() {
+        if (size == null || size < 1) {
+            return DEFAULT_SIZE;
         }
-        if (pageSize > MAX_PAGE_SIZE) {
-            return MAX_PAGE_SIZE;
+        if (size > MAX_SIZE) {
+            return MAX_SIZE;
         }
-        return pageSize;
-    }
-
-    /**
-     * 计算偏移量（用于SQL查询）
-     */
-    public Integer getOffset() {
-        return (getPageNum() - 1) * getPageSize();
-    }
-
-    /**
-     * 构建分页请求
-     */
-    public static PageRequest of(Integer pageNum, Integer pageSize) {
-        PageRequest request = new PageRequest();
-        request.setPageNum(pageNum);
-        request.setPageSize(pageSize);
-        return request;
-    }
-
-    /**
-     * 构建带排序的分页请求
-     */
-    public static PageRequest of(Integer pageNum, Integer pageSize, String orderBy, Boolean asc) {
-        PageRequest request = new PageRequest();
-        request.setPageNum(pageNum);
-        request.setPageSize(pageSize);
-        request.setOrderBy(orderBy);
-        request.setAsc(asc);
-        return request;
+        return size;
     }
 }
