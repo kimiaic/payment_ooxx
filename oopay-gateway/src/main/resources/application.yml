@@ -4,81 +4,93 @@ server:
 spring:
   application:
     name: oopay-gateway
-  
+  main:
+    web-application-type: reactive
   cloud:
     gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
       routes:
-        # 商户服务
-        - id: merchant-service
-          uri: http://localhost:8081
+        # 商户服务路由
+        - id: oopay-merchant
+          uri: lb://oopay-merchant
           predicates:
             - Path=/api/merchant/**
           filters:
             - StripPrefix=1
-        
-        # 支付核心服务
-        - id: payment-service
-          uri: http://localhost:8082
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+        # 支付服务路由
+        - id: oopay-payment
+          uri: lb://oopay-payment
           predicates:
             - Path=/api/pay/**
           filters:
             - StripPrefix=1
-        
-        # 账户服务
-        - id: account-service
-          uri: http://localhost:8083
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@ipKeyResolver}"
+        # 账户服务路由
+        - id: oopay-account
+          uri: lb://oopay-account
           predicates:
             - Path=/api/account/**
           filters:
             - StripPrefix=1
-        
-        # 通知服务
-        - id: notify-service
-          uri: http://localhost:8084
+        # 通知服务路由
+        - id: oopay-notify
+          uri: lb://oopay-notify
           predicates:
             - Path=/api/notify/**
           filters:
             - StripPrefix=1
-        
-        # 管理后台服务
-        - id: admin-service
-          uri: http://localhost:8085
+        # 管理服务路由
+        - id: oopay-admin
+          uri: lb://oopay-admin
           predicates:
             - Path=/api/admin/**
           filters:
             - StripPrefix=1
-      
       globalcors:
         cors-configurations:
           '[/**]':
             allowedOrigins: "*"
             allowedMethods: "*"
             allowedHeaders: "*"
-  
-  # Redis 配置
-  redis:
-    host: localhost
-    port: 6379
-    database: 0
-    timeout: 5000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: 5000ms
+            allowCredentials: false
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
 # 日志配置
 logging:
   level:
-    com.oopay: DEBUG
-    org.springframework.cloud.gateway: DEBUG
+    root: INFO
+    com.oopay.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{requestId}] %-5level %logger{50} - %msg%n"
 
-# 管理端点
+# 限流配置
+oopay:
+  rate-limit:
+    enabled: true
+    replenish-rate: 100
+    burst-capacity: 200
+
+---
+# Actuator 配置
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,gateway,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

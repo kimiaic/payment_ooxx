@@ -1,85 +1,69 @@
 package com.oopay.common.util;
 
-import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
- * 商户请求签名专用工具类
+ * 商户签名工具类
+ * 用于验证商户请求的签名
  */
 public class SignUtil {
 
-    private static final int NONCE_LENGTH = 16;
-    private static final int DEFAULT_TOLERANCE_SECONDS = 300; // 5分钟容差
+    /**
+     * 生成签名
+     *
+     * @param params 参数Map（不包含sign字段）
+     * @param key    商户密钥
+     * @return 签名
+     */
+    public static String sign(Map<String, Object> params, String key) {
+        // 过滤空值和sign字段，按key排序
+        String signContent = params.entrySet().stream()
+                .filter(entry -> entry.getValue() != null)
+                .filter(entry -> !"sign".equals(entry.getKey()))
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("\u0026"));
+
+        // 拼接密钥
+        String signString = signContent + "\u0026key=" + key;
+
+        // 使用HMAC-SHA256签名
+        return HmacSha256Util.sign(signString, key);
+    }
 
     /**
-     * 构建待签名字符串
+     * 验证签名
+     *
+     * @param params 参数Map（包含sign字段）
+     * @param key    商户密钥
+     * @return 验证结果
+     */
+    public static boolean verify(Map<String, Object> params, String key) {
+        String sign = (String) params.get("sign");
+        if (sign == null || sign.isEmpty()) {
+            return false;
+        }
+        String expectedSign = sign(params, key);
+        return sign.equals(expectedSign);
+    }
+
+    /**
+     * 生成待签名字符串（用于日志或调试）
      *
      * @param params 参数Map
-     * @return 待签名字符串（key1=value1\u0026key2=value2...）
+     * @param key    商户密钥
+     * @return 待签名字符串
      */
-    public static String buildSignStr(Map<String, String> params) {
-        if (params == null || params.isEmpty()) {
-            return "";
-        }
-
-        // 过滤空值和 sign 字段，按键排序
-        Map<String, String> sortedParams = new TreeMap<>();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (key != null && !"sign".equals(key) && value != null && !value.isEmpty()) {
-                sortedParams.put(key, value);
-            }
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
-            sb.append(entry.getKey()).append("=").append(entry.getValue()).append("\u0026");
-        }
-
-        if (sb.length() > 0) {
-            sb.deleteCharAt(sb.length() - 1);
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * 生成随机 Nonce 字符串
-     *
-     * @return 16位随机字符串（字母数字混合）
-     */
-    public static String generateNonce() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        SecureRandom random = new SecureRandom();
-        StringBuilder sb = new StringBuilder(NONCE_LENGTH);
-        for (int i = 0; i < NONCE_LENGTH; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
-
-    /**
-     * 校验时间戳是否过期（防重放攻击）
-     *
-     * @param timestamp        请求时间戳（秒级 Unix 时间戳）
-     * @param toleranceSeconds 容差时间（秒）
-     * @return true-未过期，false-已过期或未来时间
-     */
-    public static boolean isExpired(long timestamp, int toleranceSeconds) {
-        long now = System.currentTimeMillis() / 1000;
-        // 容差时间内有效
-        return Math.abs(now - timestamp) <= toleranceSeconds;
-    }
-
-    /**
-     * 校验时间戳是否过期（使用默认容差5分钟）
-     *
-     * @param timestamp 请求时间戳（秒级）
-     * @return true-未过期
-     */
-    public static boolean isExpired(long timestamp) {
-        return isExpired(timestamp, DEFAULT_TOLERANCE_SECONDS);
+    public static String getSignContent(Map<String, Object> params, String key) {
+        String signContent = params.entrySet().stream()
+                .filter(entry -> entry.getValue() != null)
+                .filter(entry -> !"sign".equals(entry.getKey()))
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("\u0026"));
+        return signContent + "\u0026key=" + key;
     }
 }
