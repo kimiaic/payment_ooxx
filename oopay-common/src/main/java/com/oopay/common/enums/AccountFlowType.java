@@ -2,17 +2,12 @@ package com.oopay.common.enums;
 
 import lombok.Getter;
 
-/**
- * 账户流水交易类型枚举
- */
 @Getter
 public enum AccountFlowType {
-
-    RECHARGE(1, "充值"),
-    WITHDRAW(2, "提现"),
-    PAYMENT(3, "支付"),
-    REFUND(4, "退款"),
-    FEE(5, "手续费");
+    IN(1, "收入"),
+    OUT(2, "支出"),
+    FREEZE(3, "冻结"),
+    UNFREEZE(4, "解冻");
 
     private final int code;
     private final String desc;
