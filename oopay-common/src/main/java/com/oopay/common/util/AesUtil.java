@@ -1,7 +1,6 @@
 package com.oopay.common.util;
 
 import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -11,95 +10,91 @@ import java.util.Base64;
 
 /**
  * AES-256-GCM 加密工具类
- * 用于加密敏感信息（手机号、密钥等）
  */
 public class AesUtil {
 
-    private static final String ALGORITHM = "AES/GCM/NoPadding";
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES/GCM/NoPadding";
     private static final int GCM_IV_LENGTH = 12;
-    private static final int GCM_TAG_LENGTH = 128;
+    private static final int GCM_TAG_LENGTH = 16;
 
     /**
-     * 加密
+     * AES-256-GCM 加密
      *
      * @param plaintext 明文
-     * @param key       密钥（Base64编码的256位密钥）
-     * @return Base64编码的密文（IV + 密文）
+     * @param key       密钥（32字节）
+     * @return Base64编码的密文（IV + ciphertext + authTag）
      */
     public static String encrypt(String plaintext, String key) {
-        try {
-            byte[] keyBytes = Base64.getDecoder().decode(key);
-            SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
+        if (plaintext == null || key == null) {
+            throw new IllegalArgumentException("明文和密钥不能为空");
+        }
 
-            // 生成随机IV
+        try {
+            // 生成随机 IV
             byte[] iv = new byte[GCM_IV_LENGTH];
             SecureRandom random = new SecureRandom();
             random.nextBytes(iv);
 
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
+            // 密钥处理
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            SecretKeySpec keySpec = new SecretKeySpec(keyBytes, ALGORITHM);
 
-            byte[] cipherText = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
+            // 加密
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
 
-            // 将IV和密文组合
-            ByteBuffer byteBuffer = ByteBuffer.allocate(iv.length + cipherText.length);
+            byte[] ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
+
+            // 组合 IV + ciphertext
+            ByteBuffer byteBuffer = ByteBuffer.allocate(iv.length + ciphertext.length);
             byteBuffer.put(iv);
-            byteBuffer.put(cipherText);
+            byteBuffer.put(ciphertext);
 
             return Base64.getEncoder().encodeToString(byteBuffer.array());
         } catch (Exception e) {
-            throw new RuntimeException("AES加密失败", e);
+            throw new RuntimeException("AES 加密失败", e);
         }
     }
 
     /**
-     * 解密
+     * AES-256-GCM 解密
      *
-     * @param ciphertext Base64编码的密文（IV + 密文）
-     * @param key        密钥（Base64编码的256位密钥）
+     * @param ciphertext Base64编码的密文
+     * @param key        密钥（32字节）
      * @return 明文
      */
     public static String decrypt(String ciphertext, String key) {
+        if (ciphertext == null || key == null) {
+            throw new IllegalArgumentException("密文和密钥不能为空");
+        }
+
         try {
-            byte[] keyBytes = Base64.getDecoder().decode(key);
-            SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
+            byte[] decoded = Base64.getDecoder().decode(ciphertext);
 
-            byte[] cipherData = Base64.getDecoder().decode(ciphertext);
-
-            // 提取IV
-            ByteBuffer byteBuffer = ByteBuffer.wrap(cipherData);
+            // 提取 IV
+            ByteBuffer byteBuffer = ByteBuffer.wrap(decoded);
             byte[] iv = new byte[GCM_IV_LENGTH];
             byteBuffer.get(iv);
 
-            // 提取密文
-            byte[] cipherText = new byte[byteBuffer.remaining()];
-            byteBuffer.get(cipherText);
+            // 提取 ciphertext
+            byte[] cipherBytes = new byte[byteBuffer.remaining()];
+            byteBuffer.get(cipherBytes);
 
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
+            // 密钥处理
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            SecretKeySpec keySpec = new SecretKeySpec(keyBytes, ALGORITHM);
 
-            byte[] plainText = cipher.doFinal(cipherText);
-            return new String(plainText, StandardCharsets.UTF_8);
+            // 解密
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv);
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
+
+            byte[] plaintext = cipher.doFinal(cipherBytes);
+            return new String(plaintext, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("AES解密失败", e);
-        }
-    }
-
-    /**
-     * 生成AES-256密钥
-     *
-     * @return Base64编码的密钥
-     */
-    public static String generateKey() {
-        try {
-            byte[] key = new byte[32]; // 256位
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(key);
-            return Base64.getEncoder().encodeToString(key);
-        } catch (Exception e) {
-            throw new RuntimeException("生成密钥失败", e);
+            throw new RuntimeException("AES 解密失败", e);
         }
     }
 }
