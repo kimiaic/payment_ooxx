@@ -10,10 +10,80 @@
 
 ### 规划中
 
-- [ ] 微信支付通道接入
-- [ ] 支付宝支付通道接入
-- [ ] 基础订单管理功能
-- [ ] 商户入驻与管理
+- [ ] Phase 1.3 Mapper XML 接口定义
+- [ ] Phase 1.4 Service 接口定义
+- [ ] Phase 1.5 网关过滤器完善
+- [ ] Phase 1.6 配置中心对接
+
+### 已完成的整理工作
+
+- [x] 删除根目录废弃 `docs/` 目录，统一使用 `oopay-docs/`
+- [x] 修复 Issue #1 中开发计划链接路径错误
+- [x] Phase 1 验收标准补充安全要求（timestamp 防重放 + bcrypt）
+
+---
+
+## [1.0.1] - 2026-04-12
+
+### Phase 1 基础设施（进行中）
+
+#### 代码
+
+- **数据库脚本** - `oopay-common/src/main/resources/db/migration/V1__init_schema.sql`
+  - 12张核心表 DDL
+  - 初始化数据：默认 admin 账号、系统基础参数
+
+- **共享实体类** (`oopay-common/src/main/java/com/oopay/common/entity/`)
+  - `BaseEntity.java` - 抽象基类
+  - `Merchant.java` - 商户实体
+  - `MerchantChannel.java` - 商户通道配置
+  - `PaymentOrder.java` - 支付订单
+  - `Account.java` - 账户资金
+  - `AccountTransaction.java` - 账户流水
+  - `NotifyRecord.java` - 通知记录
+  - `SystemConfig.java` - 系统配置
+
+- **共享 DTO** (`oopay-common/src/main/java/com/oopay/common/dto/`)
+  - `PageRequest.java` - 分页请求
+  - `PageResult.java` - 分页结果
+  - `Result.java` - 统一响应
+
+- **枚举类** (`oopay-common/src/main/java/com/oopay/common/enums/`)
+  - `AccountFlowType.java` - 账户流水类型
+  - `NotifyStatus.java` - 通知状态
+  - `OrderStatus.java` - 订单状态
+  - `PayType.java` - 支付类型
+  - `RefundStatus.java` - 退款状态
+
+- **工具类** (`oopay-common/src/main/java/com/oopay/common/util/`)
+  - `AesUtil.java` - AES-256 加密
+  - `AmountUtil.java` - 金额转换（分↔元）
+  - `HmacSha256Util.java` - HMAC 签名
+  - `SignUtil.java` - 请求签名
+  - `SnowflakeIdUtil.java` - 分布式 ID 生成
+
+- **网关基础** (`oopay-gateway/src/main/java/com/oopay/gateway/`)
+  - `RateLimitConfig.java` - 限流配置
+  - `RequestLogFilter.java` - 请求日志过滤器
+  - `BusinessException.java` - 业务异常
+  - `GlobalExceptionHandler.java` - 全局异常处理
+
+#### 文档
+
+- **协作规则** - `AGENT_RULES.md`
+  - AI 协作规范 v1.0
+  - Git 提交规范
+  - 任务执行规范
+
+- **待处理事项** - `TODO.md`
+  - 当前任务跟踪
+  - 优先级管理
+
+### 安全要求强化
+
+- Phase 1 验收标准新增：
+  - □ timestamp 防重放攻击检查机制实现
+  - □ 密码使用 bcrypt(cost=12) 加密存储
 
 ---
 
