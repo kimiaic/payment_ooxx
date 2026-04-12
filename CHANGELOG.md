@@ -27,27 +27,27 @@ OOPay 支付系统 v1.0 设计阶段完成，包含完整的文档体系。
 
 #### 新增
 
-- **产品需求文档** (`docs/prd/`)
+- **产品需求文档** (`oopay-docs/docs/prd/`)
   - `PRD-v1.0.md` - 产品需求主文档，包含业务规则、流程设计
   - `feature-list.md` - 58个功能点完整清单，按模块分类
   - `feature-fields.md` - 功能字段设计，命名规范
 
-- **架构设计** (`docs/architecture/`)
+- **架构设计** (`oopay-docs/docs/architecture/`)
   - `architecture.md` - 系统架构、服务依赖、时序图、部署方案
 
-- **数据库设计** (`docs/db/`)
+- **数据库设计** (`oopay-docs/docs/db/`)
   - `db-schema.md` - 12张核心表 DDL，含金额处理规范
 
-- **安全设计** (`docs/security/`)
+- **安全设计** (`oopay-docs/docs/security/`)
   - `security-design.md` - 安全架构、P0/P1/P2 实施清单
 
-- **API 文档** (`docs/api/`)
+- **API 文档** (`oopay-docs/docs/api/`)
   - `api-reference.md` - 完整接口规范、签名算法
 
-- **运营手册** (`docs/ops/`)
+- **运营手册** (`oopay-docs/docs/ops/`)
   - `operations.md` - 日常运维、监控告警、故障处理
 
-- **UI 设计** (`docs/ui/`)
+- **UI 设计** (`oopay-docs/docs/ui/`)
   - `ui-design.md` - 界面原型、设计规范
 
 ### 核心设计决策

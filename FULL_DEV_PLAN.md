@@ -710,12 +710,12 @@ Phase 7: 生产准备
 
 ### 8.1 参考文档
 
-- [PRD-v1.0.md](./docs/prd/PRD-v1.0.md)
-- [architecture.md](./docs/architecture/architecture.md)
-- [db-schema.md](./docs/db/db-schema.md)
-- [api-reference.md](./docs/api/api-reference.md)
-- [admin-api-reference.md](./docs/api/admin-api-reference.md)
-- [ui-design.md](./docs/ui/ui-design.md)
+- [PRD-v1.0.md](./oopay-docs/docs/prd/PRD-v1.0.md)
+- [architecture.md](./oopay-docs/docs/architecture/architecture.md)
+- [db-schema.md](./oopay-docs/docs/db/db-schema.md)
+- [api-reference.md](./oopay-docs/docs/api/api-reference.md)
+- [admin-api-reference.md](./oopay-docs/docs/api/admin-api-reference.md)
+- [ui-design.md](./oopay-docs/docs/ui/ui-design.md)
 
 ### 8.2 联系信息
 
